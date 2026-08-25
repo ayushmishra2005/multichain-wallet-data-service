@@ -1,8 +1,7 @@
 # multichain-wallet-data-service
 
-HTTP API over Zerion wallet data for EVM and Solana addresses. It returns a simple portfolio summary and one page of recent activity.
+HTTP API over Zerion wallet data for EVM and Solana addresses. It returns a simple portfolio summary and one page of wallet activity.
 
-This project is not affiliated with Zerion.
 Licensed under the Apache License 2.0.
 
 ## What it does
@@ -72,14 +71,16 @@ curl -s http://127.0.0.1:8080/metrics
 Simple-asset portfolio totals. Optional `currency` (default `usd`).
 
 ```bash
-curl -s "http://127.0.0.1:8080/v1/wallets/0x1111111111111111111111111111111111111111/summary?currency=usd"
+export WALLET_ADDRESS="your_wallet_address"
+curl -s \
+  "http://127.0.0.1:8080/v1/wallets/${WALLET_ADDRESS}/summary?currency=usd"
 ```
 
 Example response:
 
 ```json
 {
-  "address": "0x1111111111111111111111111111111111111111",
+  "address": "your_wallet_address",
   "address_type": "evm",
   "currency": "usd",
   "total": 2017.48,
@@ -102,7 +103,7 @@ A valid empty/zero portfolio is `200`, not `404`.
 
 ### `GET /v1/wallets/{address}/activity`
 
-One page of recent non-trash transactions.
+One page of non-trash wallet transactions in Zerion's returned order.
 
 Query parameters on the first page:
 
@@ -112,7 +113,8 @@ Query parameters on the first page:
 - `operation_types` (comma-separated)
 
 ```bash
-curl -s "http://127.0.0.1:8080/v1/wallets/11111111111111111111111111111111/activity?page_size=20"
+curl -s \
+  "http://127.0.0.1:8080/v1/wallets/${WALLET_ADDRESS}/activity?page_size=20"
 ```
 
 A valid empty page is `200` with `"items": []`.
@@ -136,7 +138,7 @@ Tests use a local fake Zerion server. They do not need a live API key.
 ## Design notes
 
 - One activity request fetches exactly one Zerion page.
-- Successful summaries are cached in memory for 15 seconds (about 1024 entries).
+- Successful summaries are cached in memory for 15 seconds, with a maximum of 1024 entries.
 - The service does not walk full transaction history.
 - There is no database.
 - The Zerion key stays on the server. It is not accepted from callers and is not logged.
